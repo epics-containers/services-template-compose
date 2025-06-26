@@ -31,6 +31,9 @@ do
         runtime=/tmp/ioc-runtime/$(basename ${service})
         mkdir -p ${runtime}
 
+        # avoid issues with auto-gen genicam pvi files (ioc-adaravis only)
+        sed -i s/AutoADGenICam/ADGenICam/ ${service}/config/ioc.yaml
+
         # This will fail and exit if the ioc.yaml is invalid
         $docker run --rm --entrypoint bash \
             --security-opt label=disable \
