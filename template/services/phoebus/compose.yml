@@ -10,6 +10,7 @@ services:
     environment:
       DISPLAY: $DISPLAY
       UIDGID: ${UIDGID:-0:0} # defaults to working with rootless
+      TZ: ${TZ:-UTC} # host time zone, set by environment.sh; UTC if unset
 
     tty: true
     # pick a server port for phoebus so it does not reconnect to existing phoebus
