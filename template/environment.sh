@@ -37,6 +37,30 @@ xhost +SI:localuser:$(id -un)
 
 # set user id for the phoebus container for easy X11 forwarding.
 export UIDGID=$USER_ID:$USER_GID
+
+# pass the host's time zone to containers that read TZ (e.g. phoebus), so
+# that times such as data browser plot axes are shown in local time rather
+# than the container default of UTC. Bind-mounting /etc/localtime, or a
+# container engine's --tz=local, does not help here: /etc/localtime in the
+# images is a symlink, so both land on its target and readers such as the
+# JDK still see the symlink name Etc/UTC.
+if [[ -z ${TZ} ]]; then
+    TZ=$(timedatectl show -p Timezone --value 2>/dev/null)
+fi
+if [[ -z ${TZ} && -L /etc/localtime ]]; then
+    TZ=$(readlink -f /etc/localtime | sed -n 's|.*/zoneinfo/||p')
+fi
+if [[ -z ${TZ} && -r /etc/timezone ]]; then
+    # the zone name Debian/Ubuntu keep alongside /etc/localtime
+    TZ=$(head -n 1 /etc/timezone)
+fi
+if [[ -n ${TZ} ]]; then
+    export TZ
+else
+    echo "WARNING: could not determine the host time zone, times will be UTC." \
+        "Set TZ e.g. export TZ=Europe/London before sourcing this script." >&2
+fi
+
 # default to the test profile for docker compose
 export COMPOSE_PROFILES=test
 # for test profile our ca-gateway publishes PVS on the loopback interface
